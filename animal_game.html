@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק קפיצות החיות</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            height: 400px;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .character {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .character.jumping {
+            animation: jump 0.6s ease-in-out;
+        }
+
+        @keyframes jump {
+            0% { transform: translateX(-50%) translateY(0px); }
+            50% { transform: translateX(-50%) translateY(-100px); }
+            100% { transform: translateX(-50%) translateY(0px); }
+        }
+
+        .jump-button {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border: none;
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+            margin: 0 auto;
+            display: block;
+        }
+
+        .jump-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .jump-button:active {
+            transform: scale(0.95);
+        }
+
+        .animals-collection {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .collection-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .animals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .animal-slot {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            font-size: 2rem;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .animal-slot.unlocked {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: rgba(76, 175, 80, 0.5);
+            animation: unlock 0.6s ease-out;
+        }
+
+        .animal-slot.locked {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes unlock {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .level-info {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .level-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .new-animal-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .new-animal-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .popup-animal {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .popup-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .popup-close {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .popup-close:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .game-title {
+                font-size: 2rem;
+            }
+
+            .character {
+                font-size: 3rem;
+            }
+
+            .jump-button {
+                width: 80px;
+                height: 80px;
+                font-size: 1rem;
+            }
+
+            .animals-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            }
+        }
+
+        .floating-score {
+            position: absolute;
+            color: #4CAF50;
+            font-weight: bold;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🎮 משחק קפיצות החיות 🎮</h1>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-label">קפיצות רצופות</div>
+                <div class="stat-value" id="jumpCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">חיות שנאספו</div>
+                <div class="stat-value" id="animalCount">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">שלב נוכחי</div>
+                <div class="stat-value" id="currentLevel">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">יעד קפיצות</div>
+                <div class="stat-value" id="jumpTarget">100</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <div class="character" id="character">🐱</div>
+        </div>
+
+        <button class="jump-button" id="jumpButton" onclick="jump()">
+            קפוץ!
+        </button>
+
+        <div class="level-info">
+            <div class="level-title" id="levelTitle">שלב 1: אסוף 100 חיות</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 1%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="animals-collection">
+        <div class="collection-title">אוסף החיות שלי</div>
+        <div class="animals-grid" id="animalsGrid"></div>
+    </div>
+
+    <div class="new-animal-popup" id="newAnimalPopup">
+        <div class="popup-animal" id="popupAnimal">🎉</div>
+        <div class="popup-text" id="popupText">חיה חדשה נפתחה!</div>
+        <button class="popup-close" onclick="closePopup()">המשך לשחק</button>
+    </div>
+
+    <script>
+        // Game state
+        let jumpCount = 0;
+        let consecutiveJumps = 0;
+        let animalCount = 1;
+        let currentLevel = 1;
+        let jumpTarget = 100;
+        let unlockedAnimals = new Set([0]);
+        
+        // Animals array - 300 total animals (100 per level)
+        const animals = [
+            // Level 1 animals (0-99)
+            '🐱', '🐶', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', 
+            '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🦍',
+            '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜',
+            '🦗', '🕷', '🦂', '🐊', '🐢', '🦎', '🐍', '🐲', '🐉', '🦕',
+            '🦖', '🐳', '🐋', '🐬', '🐟', '🐠', '🐡', '🦈', '🐙', '🦑',
+            '🦐', '🦀', '🐚', '🐌', '🦆', '🐥', '🐣', '🐤', '🐦', '🐧',
+            '🕊', '🦅', '🦆', '🦢', '🦉', '🦚', '🦜', '🐓', '🦃', '🐇',
+            '🐿', '🦔', '🐾', '🐕', '🐩', '🐈', '🐅', '🐆', '🦓', '🦏',
+            '🦛', '🐘', '🐪', '🐫', '🦒', '🐃', '🐂', '🐄', '🐎', '🐖',
+            '🐏', '🐑', '🐐', '🦌', '🐕‍🦺', '🐅', '🐆', '🦝', '🐻‍❄️', '🐨'
+        ];
+
+        // Add more animals for levels 2 and 3
+        for (let i = 100; i < 300; i++) {
+            animals.push(animals[i % 100]);
+        }
+
+        // Elements
+        const character = document.getElementById('character');
+        const jumpCountEl = document.getElementById('jumpCount');
+        const animalCountEl = document.getElementById('animalCount');
+        const currentLevelEl = document.getElementById('currentLevel');
+        const jumpTargetEl = document.getElementById('jumpTarget');
+        const levelTitleEl = document.getElementById('levelTitle');
+        const progressFillEl = document.getElementById('progressFill');
+        const animalsGridEl = document.getElementById('animalsGrid');
+        const newAnimalPopup = document.getElementById('newAnimalPopup');
+        const popupAnimal = document.getElementById('popupAnimal');
+        const popupText = document.getElementById('popupText');
+        const gameArea = document.getElementById('gameArea');
+
+        function initializeGame() {
+            character.textContent = animals[0];
+            createAnimalGrid();
+            updateDisplay();
+        }
+
+        function createAnimalGrid() {
+            animalsGridEl.innerHTML = '';
+            const totalAnimals = currentLevel * 100;
+            
+            for (let i = 0; i < totalAnimals; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'animal-slot';
+                
+                if (unlockedAnimals.has(i)) {
+                    slot.className += ' unlocked';
+                    slot.textContent = animals[i];
+                } else {
+                    slot.className += ' locked';
+                    slot.textContent = '❓';
+                }
+                
+                animalsGridEl.appendChild(slot);
+            }
+        }
+
+        function jump() {
+            if (character.classList.contains('jumping')) return;
+            
+            character.classList.add('jumping');
+            consecutiveJumps++;
+            jumpCount++;
+            
+            // Show floating score
+            showFloatingScore();
+            
+            // Check if player gets new animal
+            if (consecutiveJumps >= jumpTarget) {
+                unlockNewAnimal();
+                consecutiveJumps = 0;
+            }
+            
+            updateDisplay();
+            
+            setTimeout(() => {
+                character.classList.remove('jumping');
+            }, 600);
+        }
+
+        function showFloatingScore() {
+            const floatingScore = document.createElement('div');
+            floatingScore.className = 'floating-score';
+            floatingScore.textContent = '+1';
+            floatingScore.style.left = Math.random() * 200 + 300 + 'px';
+            floatingScore.style.top = Math.random() * 100 + 200 + 'px';
+            gameArea.appendChild(floatingScore);
+            
+            setTimeout(() => {
+                gameArea.removeChild(floatingScore);
+            }, 1000);
+        }
+
+        function unlockNewAnimal() {
+            const maxAnimals = currentLevel * 100;
+            
+            if (animalCount < maxAnimals) {
+                unlockedAnimals.add(animalCount);
+                showNewAnimalPopup(animals[animalCount]);
+                animalCount++;
+                
+                // Update character to new animal
+                character.textContent = animals[animalCount - 1];
+                
+                // Check if level completed
+                if (animalCount >= maxAnimals) {
+                    levelUp();
+                }
+            }
+            
+            createAnimalGrid();
+        }
+
+        function levelUp() {
+            if (currentLevel < 3) {
+                currentLevel++;
+                jumpTarget = currentLevel * 100;
+                
+                setTimeout(() => {
+                    alert(`🎉 כל הכבוד! עברת לשלב ${currentLevel}! 🎉`);
+                }, 500);
+            } else {
+                setTimeout(() => {
+                    alert('🏆 מזל טוב! סיימת את המשחק! אספת את כל 300 החיות! 🏆');
+                }, 500);
+            }
+        }
+
+        function showNewAnimalPopup(animal) {
+            popupAnimal.textContent = animal;
+            popupText.textContent = `חיה חדשה נפתחה! ${animal}`;
+            newAnimalPopup.classList.add('show');
+        }
+
+        function closePopup() {
+            newAnimalPopup.classList.remove('show');
+        }
+
+        function updateDisplay() {
+            jumpCountEl.textContent = consecutiveJumps;
+            animalCountEl.textContent = animalCount;
+            currentLevelEl.textContent = currentLevel;
+            jumpTargetEl.textContent = jumpTarget;
+            
+            const maxAnimals = currentLevel * 100;
+            const progressPercent = (animalCount / maxAnimals) * 100;
+            progressFillEl.style.width = progressPercent + '%';
+            
+            levelTitleEl.textContent = `שלב ${currentLevel}: אסוף ${maxAnimals} חיות`;
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        // Reset consecutive jumps if player stops jumping for too long
+        let lastJumpTime = Date.now();
+        setInterval(() => {
+            if (Date.now() - lastJumpTime > 3000 && consecutiveJumps > 0) {
+                consecutiveJumps = 0;
+                updateDisplay();
+            }
+        }, 1000);
+
+        // Update last jump time
+        document.getElementById('jumpButton').addEventListener('click', () => {
+            lastJumpTime = Date.now();
+        });
+
+        // Initialize game
+        initializeGame();
+    </script>
+</body>
+</html>
